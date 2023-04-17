@@ -1,0 +1,67 @@
+import sys
+import cv2
+from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow, QAction, QFileDialog
+from PyQt5.QtCore import Qt
+
+class MainWindow(QMainWindow):
+
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+        self.capture = None
+
+    def initUI(self):
+        self.setWindowTitle("Aplikasi Rekam Citra Medis")
+        self.setGeometry(100, 100, 800, 600)
+
+        self.central_widget = QLabel(self)
+        self.setCentralWidget(self.central_widget)
+
+        # Membuat tombol untuk memulai dan menghentikan rekaman
+        start_action = QAction("Mulai", self)
+        start_action.triggered.connect(self.start_capture)
+        stop_action = QAction("Stop", self)
+        stop_action.triggered.connect(self.stop_capture)
+
+        # Membuat menu bar
+        menu_bar = self.menuBar()
+        file_menu = menu_bar.addMenu("File")
+        file_menu.addAction(start_action)
+        file_menu.addAction(stop_action)
+
+    def start_capture(self):
+        # Membuka kamera
+        self.capture = cv2.VideoCapture(0)
+
+        # Mengambil gambar dari kamera dan menampilkan pada jendela
+        ret, frame = self.capture.read()
+        if ret:
+            self.display_image(frame)
+
+    def stop_capture(self):
+        # Menghentikan rekaman dan menutup kamera
+        if self.capture:
+            self.capture.release()
+            self.capture = None
+
+    def display_image(self, img):
+        # Konversi citra OpenCV ke QImage untuk ditampilkan pada QLabel
+        qimg = QImage(img, img.shape[1], img.shape[0], QImage.Format_RGB888)
+        pixmap = QPixmap(qimg)
+        self.central_widget.setPixmap(pixmap)
+
+    def keyPressEvent(self, event):
+        # Menyimpan citra saat tombol "S" ditekan
+        if event.key() == Qt.Key_S:
+            file_name, _ = QFileDialog.getSaveFileName(self, "Simpan Gambar", "", "Images (*.png *.jpg)")
+            if file_name:
+                cv2.imwrite(file_name, self.capture.read()[1])
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())
+
