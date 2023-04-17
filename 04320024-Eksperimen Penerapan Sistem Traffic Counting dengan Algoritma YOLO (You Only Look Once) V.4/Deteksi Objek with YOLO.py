@@ -5,6 +5,7 @@ Spyder Editor
 This is a temporary script file.
 """
 
+
 # Import the necessary packages
 import cv2
 import os
